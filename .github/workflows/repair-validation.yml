@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 env:
-  SOURCE_REVISION: 405e31fcb016080c774b2a3acb72631f0e105afc
+  SOURCE_REVISION: beeecc16240d5855c866a697ab210796ad887080
 
 jobs:
   lint:
