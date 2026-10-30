@@ -21,7 +21,7 @@ class Test(unittest.TestCase):
         ]
         for stderr, expected in diagnostics:
             with self.subTest(stderr=stderr):
-                with patch("pdfplumber.repair.subprocess.Popen") as popen:
+                with patch("subprocess.Popen") as popen:
                     popen.return_value.returncode = 1
                     popen.return_value.communicate.return_value = (b"", stderr)
                     with pytest.raises(Exception) as exc:
@@ -30,7 +30,7 @@ class Test(unittest.TestCase):
                 assert str(exc.value) == expected
 
     def test_repair_success_with_non_utf8_diagnostics(self):
-        with patch("pdfplumber.repair.subprocess.Popen") as popen:
+        with patch("subprocess.Popen") as popen:
             popen.return_value.returncode = 0
             popen.return_value.communicate.return_value = (
                 b"repaired PDF bytes",
