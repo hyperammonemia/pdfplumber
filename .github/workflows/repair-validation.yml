@@ -1,0 +1,55 @@
+name: Repair regression validation
+
+on:
+  push:
+    branches: [verify/repair-stderr-decoding]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SOURCE_REVISION: 405e31fcb016080c774b2a3acb72631f0e105afc
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.SOURCE_REVISION }}
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements.txt -r requirements-dev.txt
+      - run: python -m black --check pdfplumber tests
+      - run: python -m isort --profile black --check-only pdfplumber tests
+      - run: python -m flake8 pdfplumber tests
+      - run: python -m mypy --strict --implicit-reexport pdfplumber
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.SOURCE_REVISION }}
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install Ghostscript
+        run: sudo apt-get update -qq && sudo apt-get install -y ghostscript
+      - run: python -m pip install -r requirements.txt -r requirements-dev.txt
+      - name: Verify tested revision
+        run: test "$(git rev-parse HEAD)" = "$SOURCE_REVISION"
+      - run: python -m pytest -n auto
+      - run: python setup.py build sdist
